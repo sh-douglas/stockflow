@@ -7,4 +7,13 @@ const createProductsSchema = Type.Object({
   categoryId: Type.String({ format: "uuid" }),
 });
 
-export { createProductsSchema };
+const productParamsSchema = Type.Object({
+  id: Type.String({ format: "uuid" }),
+});
+
+const updateProductSchema = Type.Partial(createProductsSchema, {
+  minProperties: 1,
+  additionalProperties: false,
+});
+
+export { createProductsSchema, productParamsSchema, updateProductSchema };
