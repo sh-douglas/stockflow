@@ -124,7 +124,6 @@ async function updateProductService(
   let normalizedName: string | undefined;
   let normalizedSku: string | undefined;
   let price: Prisma.Decimal | undefined;
-  let categoryId: string | undefined;
 
   if (!product) {
     throw new AppError("Product not found.", 404);
@@ -172,9 +171,9 @@ async function updateProductService(
     }
   }
 
-  if (categoryId !== undefined) {
+  if (data.categoryId !== undefined) {
     const category = await prisma.category.findUnique({
-      where: { id: categoryId },
+      where: { id: data.categoryId },
     });
 
     if (!category) {
@@ -186,7 +185,7 @@ async function updateProductService(
     ...(normalizedName !== undefined && { name: normalizedName }),
     ...(normalizedSku !== undefined && { sku: normalizedSku }),
     ...(price !== undefined && { price }),
-    ...(categoryId !== undefined && { categoryId }),
+    ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
   };
 
   const updatedProduct = await prisma.product.update({
