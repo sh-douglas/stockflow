@@ -6,7 +6,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "db:check": "tsx src/lib/check-connection.ts"
+    "db:check": "tsx src/lib/check-connection.ts",
+    "test": "node --import tsx --import ./tests/setup.ts --test tests/*.test.ts"
   },
   "keywords": [],
   "author": "Douglas",
