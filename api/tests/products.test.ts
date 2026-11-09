@@ -2,19 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { buildApp } from "../src/app.js";
 import { randomUUID } from "node:crypto";
+import { createTestCategory } from "./helpers/create-test-category.js";
 
 test("POST /products should create a product", async () => {
   const app = buildApp();
-  const categoryName = `Test Category ${randomUUID()}`;
   const productSku = randomUUID();
 
   let categoryId: string | undefined;
 
   try {
     await app.ready();
-    const category = await app.prisma.category.create({
-      data: { name: categoryName },
-    });
+    const category = await createTestCategory(app.prisma);
     categoryId = category.id;
 
     const response = await app.inject({
@@ -37,32 +35,31 @@ test("POST /products should create a product", async () => {
     assert.strictEqual(product.quantity, 0);
     assert.strictEqual(product.price, "179.9");
   } finally {
-    await app.prisma.product.deleteMany({
-      where: { sku: productSku },
-    });
-
-    if (categoryId !== undefined) {
-      await app.prisma.category.deleteMany({
-        where: { id: categoryId },
+    try {
+      await app.prisma.product.deleteMany({
+        where: { sku: productSku },
       });
-    }
 
-    await app.close();
+      if (categoryId !== undefined) {
+        await app.prisma.category.deleteMany({
+          where: { id: categoryId },
+        });
+      }
+    } finally {
+      await app.close();
+    }
   }
 });
 
 test("POST /products should reject duplicate SKU", async () => {
   const app = buildApp();
-  const categoryName = `Test Category ${randomUUID()}`;
   const productSku = randomUUID();
 
   let categoryId: string | undefined;
 
   try {
     await app.ready();
-    const category = await app.prisma.category.create({
-      data: { name: categoryName },
-    });
+    const category = await createTestCategory(app.prisma);
     categoryId = category.id;
 
     await app.prisma.product.create({
