@@ -4,6 +4,7 @@ import prismaPlugin from "./plugins/prisma.plugin.js";
 import { errorHandler } from "./shared/errors/error-handler.js";
 import { categoriesRoutes } from "./modules/categories/categories.routes.js";
 import { productsRoutes } from "./modules/products/products.routes.js";
+import { stockMovementsRoutes } from "./modules/stock-movements/stock-movements.routes.js";
 
 export function buildApp() {
   const app = fastify({
@@ -17,6 +18,7 @@ export function buildApp() {
 
   app.register(categoriesRoutes, { prefix: "/categories" });
   app.register(productsRoutes, { prefix: "/products" });
+  app.register(stockMovementsRoutes, { prefix: "/stock-movements" });
 
   app.get("/health", (request, reply) => {
     return { status: "ok" };
