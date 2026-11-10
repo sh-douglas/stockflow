@@ -1,4 +1,5 @@
 import fastify from "fastify";
+import cors from "@fastify/cors";
 import envPlugin from "./plugins/env.plugin.js";
 import prismaPlugin from "./plugins/prisma.plugin.js";
 import { errorHandler } from "./shared/errors/error-handler.js";
@@ -15,6 +16,10 @@ export function buildApp() {
 
   app.register(envPlugin);
   app.register(prismaPlugin);
+  app.register(cors, {
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE"],
+  });
 
   app.register(categoriesRoutes, { prefix: "/categories" });
   app.register(productsRoutes, { prefix: "/products" });

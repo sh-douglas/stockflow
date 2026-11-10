@@ -21,6 +21,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@fastify/cors": "^11.4.1",
     "@fastify/env": "^7.0.1",
     "@fastify/type-provider-typebox": "^6.3.0",
     "@prisma/adapter-pg": "^7.10.1",
