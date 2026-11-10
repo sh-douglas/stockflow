@@ -1,11 +1,15 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { RouterView, RouterLink } from 'vue-router'
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <header>
+    <nav>
+      <RouterLink to="/">Dashboard</RouterLink>
+      <RouterLink to="/products">Ir para Produtos</RouterLink>
+      <RouterLink to="/categories">Ir para Categorias</RouterLink>
+      <RouterLink to="/stock-movements">Movimentações</RouterLink>
+    </nav>
+  </header>
+  <RouterView />
 </template>
-
-<style scoped></style>
