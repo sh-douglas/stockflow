@@ -29,8 +29,8 @@ interface CategoryResponse {
 const products = ref<Product[]>([])
 const errorMessage = ref<string | null>(null)
 const isLoading = ref<boolean>(true)
-const isSubmitting = ref<boolean>(false)
 const categories = ref<Category[]>([])
+const isSubmitting = ref<boolean>(false)
 const submitError = ref<string | null>(null)
 const submitSuccess = ref<string | null>(null)
 

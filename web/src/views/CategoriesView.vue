@@ -14,11 +14,18 @@ interface CategoryResponse {
 const categories = ref<Category[]>([])
 const isLoading = ref<boolean>(true)
 const errorMessage = ref<string | null>(null)
+const isSubmitting = ref<boolean>(false)
+const submitError = ref<string | null>(null)
+const submitSuccess = ref<string | null>(null)
 const categoryForm = reactive({
   name: '',
 })
 
 onMounted(async () => {
+  await loadCategories()
+})
+
+async function loadCategories() {
   isLoading.value = true
   errorMessage.value = null
 
@@ -35,7 +42,7 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
-})
+}
 
 function formatDate(date: string) {
   const parsedDate = new Date(date)
@@ -48,8 +55,42 @@ function formatDate(date: string) {
 }
 
 async function handleSubmit() {
+  if (isSubmitting.value) {
+    return
+  }
+
+  submitError.value = null
+  submitSuccess.value = null
+
+  isSubmitting.value = true
+
   const payload = {
-    name: categoryForm.name,
+    name: categoryForm.name.trim(),
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Falha ao cadastrar categoria ${response.status}`)
+    }
+
+    Object.assign(categoryForm, {
+      name: '',
+    })
+
+    submitSuccess.value = 'Categoria cadastrada com sucesso'
+    await loadCategories()
+  } catch {
+    submitError.value = 'Não foi possível cadastrar a categoria.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -59,6 +100,8 @@ async function handleSubmit() {
   <section class="category-form">
     <h2>Cadastrar categoria</h2>
     <form @submit.prevent="handleSubmit">
+      <p v-if="submitError" class="submit-error" role="alert">{{ submitError }}</p>
+      <p v-if="submitSuccess" class="submit-success" role="status">{{ submitSuccess }}</p>
       <div class="form-grid">
         <div class="form-field">
           <label for="name">Nome</label>
@@ -66,7 +109,9 @@ async function handleSubmit() {
         </div>
       </div>
       <div class="form-actions">
-        <button type="submit">Cadastrar</button>
+        <button type="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Cadastrando...' : 'Cadastrar' }}
+        </button>
       </div>
     </form>
   </section>
