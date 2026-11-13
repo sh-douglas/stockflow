@@ -17,9 +17,15 @@ const errorMessage = ref<string | null>(null)
 const isSubmitting = ref<boolean>(false)
 const submitError = ref<string | null>(null)
 const submitSuccess = ref<string | null>(null)
+const editError = ref<string | null>(null)
+const editSuccess = ref<string | null>(null)
+const deleteError = ref<string | null>(null)
+const deleteSuccess = ref<string | null>(null)
 const categoryForm = reactive({
   name: '',
 })
+const editingCategoryId = ref<string | null>(null)
+const editName = ref<string>('')
 
 onMounted(async () => {
   await loadCategories()
@@ -93,6 +99,78 @@ async function handleSubmit() {
     isSubmitting.value = false
   }
 }
+
+function startEditing(category: Category) {
+  editingCategoryId.value = category.id
+  editName.value = category.name
+}
+
+function cancelEditing() {
+  editingCategoryId.value = null
+  editName.value = ''
+}
+
+async function saveEditing() {
+  if (editingCategoryId.value === null) {
+    return
+  }
+
+  const payload = {
+    name: editName.value.trim(),
+  }
+
+  try {
+    const response = await fetch(`http://localhost:3000/categories/${editingCategoryId.value}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Falha ao editar categoria ${response.status}`)
+    }
+
+    await loadCategories()
+    cancelEditing()
+
+    editSuccess.value = 'Categoria editada com sucesso'
+  } catch {
+    editError.value = 'Não foi possível editar a categoria.'
+  }
+}
+
+async function deleteCategory(category: Category) {
+  deleteError.value = ''
+  deleteSuccess.value = ''
+
+  try {
+    const confirmed = window.confirm(`Deseja realmente apagar a categoria: ${category.name}?`)
+
+    if (!confirmed) {
+      return
+    }
+
+    const response = await fetch(`http://localhost:3000/categories/${category.id}`, {
+      method: 'DELETE',
+    })
+
+    if (response.status === 409) {
+      deleteError.value = 'Não é possivel excluir uma categoria que possui produtos vinculados'
+      return
+    }
+
+    if (!response.ok) {
+      throw new Error(`Falha ao excluir categoria ${response.status}`)
+    }
+
+    await loadCategories()
+    deleteSuccess.value = 'Categoria excluida com sucesso.'
+  } catch {
+    deleteError.value = 'Não foi possivel excluir categoria. '
+  }
+}
 </script>
 
 <template>
@@ -102,6 +180,7 @@ async function handleSubmit() {
     <form @submit.prevent="handleSubmit">
       <p v-if="submitError" class="submit-error" role="alert">{{ submitError }}</p>
       <p v-if="submitSuccess" class="submit-success" role="status">{{ submitSuccess }}</p>
+
       <div class="form-grid">
         <div class="form-field">
           <label for="name">Nome</label>
@@ -116,6 +195,10 @@ async function handleSubmit() {
     </form>
   </section>
   <section>
+    <p v-if="editError" class="submit-error" role="alert">{{ editError }}</p>
+    <p v-if="editSuccess" class="submit-success" role="status">{{ editSuccess }}</p>
+    <p v-if="deleteError" class="submit-error" role="alert">{{ deleteError }}</p>
+    <p v-if="deleteSuccess" class="submit-success" role="status">{{ deleteSuccess }}</p>
     <p v-if="isLoading">Carregando categorias...</p>
     <p v-else-if="errorMessage">{{ errorMessage }}</p>
     <p v-else-if="categories.length === 0">Nenhuma categoria cadastrada</p>
@@ -130,11 +213,53 @@ async function handleSubmit() {
         </thead>
         <tbody>
           <tr v-for="category in categories" :key="category.id">
-            <td>{{ category.name }}</td>
-            <td>{{ formatDate(category.createdAt) }}</td>
             <td>
-              <button>Deletar</button>
-              <button>Editar</button>
+              <input
+                v-if="editingCategoryId === category.id"
+                type="text"
+                v-model="editName"
+                required
+              />
+              <span v-else>
+                {{ category.name }}
+              </span>
+            </td>
+            <td>{{ formatDate(category.createdAt) }}</td>
+            <td class="table-actions">
+              <template v-if="editingCategoryId === category.id">
+                <button
+                  type="button"
+                  class="action-button action-button--save"
+                  @click="saveEditing"
+                >
+                  Salvar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button action-button--cancel"
+                  @click="cancelEditing"
+                >
+                  Cancelar
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  class="action-button action-button--edit"
+                  @click="startEditing(category)"
+                >
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button action-button--delete"
+                  @click="deleteCategory(category)"
+                >
+                  Deletar
+                </button>
+              </template>
             </td>
           </tr>
         </tbody>
@@ -144,6 +269,62 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-button--edit {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.action-button--delete {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.action-button--save {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+.action-button--cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.action-button--edit:hover {
+  background-color: #dbeafe;
+}
+.action-button--delete:hover {
+  background-color: #fee2e2;
+}
+.action-button--save:hover {
+  background-color: #1d4ed8;
+}
+.action-button--cancel:hover {
+  background-color: #e2e8f0;
+}
+
 h1 {
   margin-bottom: 32px;
 }
