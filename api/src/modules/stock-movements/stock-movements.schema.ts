@@ -8,5 +8,5 @@ export const createStockMovementSchema = Type.Object({
 });
 
 export const listStockMovementsSchema = Type.Object({
-  productId: Type.String({ format: "uuid" }),
+  productId: Type.Optional(Type.String({ format: "uuid" })),
 });

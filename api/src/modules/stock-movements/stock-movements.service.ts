@@ -63,10 +63,10 @@ async function createStockMovementService(
 
 async function listStockMovementsService(
   prisma: PrismaClient,
-  productId: string,
+  productId: string | undefined,
 ) {
   return prisma.stockMovement.findMany({
-    where: { productId },
+    where: productId ? { productId } : {},
     orderBy: {
       createdAt: "desc",
     },

@@ -8,7 +8,6 @@ import {
   createStockMovementService,
   listStockMovementsService,
 } from "./stock-movements.service.js";
-import { request } from "node:http";
 
 const stockMovementsRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<TypeBoxTypeProvider>();
